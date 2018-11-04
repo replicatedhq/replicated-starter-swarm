@@ -1,0 +1,100 @@
+---
+# kind: replicated
+
+replicated_api_version: 2.29.0
+name: "Swarm Nginx Example"
+
+properties:
+  console_title: Swarm Nginx Example
+  app_url: https://{{repl ConsoleSetting "tls.hostname" }}
+  logo_url: https://s3.amazonaws.com/poly-screenshots.angel.co/Project/5e/418654/b33617f926fd6c7df2ddab361dd3d60d-original.png
+host_requirements:
+  cpu_cores: 1
+  memory: 2GB
+  disk_space: 10GB
+  docker_space: 2GB
+  replicated_version: ">=2.30.1"
+
+config:
+- name: basics
+  title: Site Configuration
+  description: Basic config for the site
+  items:
+  - name: name
+    title: Name
+    help_text: Please provide your name
+    type: text
+    required: true
+
+swarm:
+  configs:
+  - name: nginx_config
+    value: |
+      server {
+        listen                443 ssl;
+        server_name           localhost;
+        ssl_certificate       /run/secrets/tls_cert;
+        ssl_certificate_key   /run/secrets/tls_key;
+
+        location / {
+            root   /usr/share/nginx/html;
+            index  index.html index.htm;
+            add_header Cache-Control no-cache;
+        }
+      }
+  - name: nginx_index
+    value: |
+        <h2 style="text-align: center">Hello, {{repl ConfigOption "name"}}!</h2>
+  secrets:
+  - name: tls_cert
+    value: '{{repl ConsoleSetting "tls.cert.data" }}'
+  - name: tls_key
+    value: '{{repl ConsoleSetting "tls.key.data" }}'
+
+monitors:
+  cpuacct:
+  - nginx
+  memory:
+  - nginx
+
+backup:
+  enabled: true
+
+images:
+- source: public
+  name: nginx
+  tag: alpine
+
+---
+# kind: scheduler-swarm
+version: "3.4"
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+    - 443:443
+    configs:
+    - source: nginx_config
+      target: /etc/nginx/conf.d/site.conf
+    - source: nginx_index
+      target: /usr/share/nginx/html/index.html
+    secrets:
+    - tls_cert
+    - tls_key
+    deploy:
+      replicas: 2
+      # start new versions before stopping old ones
+      update_config:
+        order: start-first
+
+configs:
+  nginx_config:
+    external: true
+  nginx_index:
+    external: true
+
+secrets:
+  tls_cert:
+    external: true
+  tls_key:
+    external: true
