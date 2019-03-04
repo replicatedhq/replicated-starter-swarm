@@ -19,7 +19,7 @@ Replicated YAML using a git repository.
 First, clone the repo and re-initialize it
 
 ```
-git clone https://github.com/replicatedhq/replicated-starter-swarm
+git clone github.com/replicatedhq/replicated-starter-swarm.git
 cd replicated-starter-swarm
 rm -rf .git
 git init
@@ -29,8 +29,12 @@ git remote add origin <your git repo>
 #### Configure environment
 
 You'll need to set up two environment variables to interact with vendor.replicated.com,
-`REPLICATED_APP` and `REPLICATED_API_TOKEN`. `REPLICATED_APP` should be set to the
-app name in the URL path at https://vendor.replicated.com/apps:
+
+
+- `REPLICATED_APP` and
+- `REPLICATED_API_TOKEN`
+
+`REPLICATED_APP` should be set to the app slug from the Settings page:
 
 <p align="center"><img src="./doc/REPLICATED_APP.png" width=600></img></p>
 
@@ -49,7 +53,7 @@ export REPLICATED_API_TOKEN=...
 You can ensure this is working with
 
 ```
-make deps list-releases
+make list-releases
 ```
 
 #### Iterating on your release
@@ -57,7 +61,25 @@ make deps list-releases
 Once you've made changes to `replicated.yaml`, you can push a new release to a channel with
 
 ```
-make release channel=Unstable
+make release
+```
+
+By default the `Unstable` channel will be used. You can override this with `channel`:
+
+```
+make release channel=Beta
+```
+
+If you have nodejs installated, you can lint your YAML before releasing with
+
+```
+make lint
+```
+
+or even
+
+```
+make lint release
 ```
 
 For an integrated approach, you can use `make watch` to watch the `replicated.yaml` file, linting and
