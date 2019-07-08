@@ -6,7 +6,7 @@ name: "Swarm Nginx Example"
 
 properties:
   console_title: Swarm Nginx Example
-  app_url: https://{{repl ConsoleSetting "tls.hostname" }}
+  app_url: https://{{repl ConfigOption "hostname" }}
   logo_url: https://s3.amazonaws.com/poly-screenshots.angel.co/Project/5e/418654/b33617f926fd6c7df2ddab361dd3d60d-original.png
 host_requirements:
   cpu_cores: 1
