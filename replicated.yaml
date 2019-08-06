@@ -25,6 +25,13 @@ config:
     help_text: Please provide your name
     type: text
     required: true
+  - name: hostname
+    title: Hostname
+    value: '{{repl ConsoleSetting "tls.hostname" }}'
+    type: text
+    test_proc:
+      display_name: Check DNS
+      command: resolve_host
 
 swarm:
   configs:
