@@ -107,33 +107,21 @@ $ make watch channel=my-dev-channel
 info gazer-color Watching 1 file[s] (replicated.yaml)
 ```
 
-#### Run CLI in Docker
+#### CLI in Docker
 
-Use the `Dockerfile` to execute the Replicated CLI inside a container. This is especially helpful if you are running on Windows since `make` and `replicated` cli are not supported. If you have OS X or Linux you can continue using `make`.
+Use `replicated/vendor-cli` Docker image to execute the CLI inside a container. This is useful in environments where `make` and `replicated` cli are unsupported. If you have OS X or Linux continue using `make`.
 
-Build the image
-```
-docker build -t replicated-cli .
-```
-
-Run Replicated CLI container to verify
-```
-docker run -t replicated-cli --help
-```
-
-If the above command was successful you can run the following `make` commands. If `make` is not available just copy the respective commands from `Makefile` to execute separately.
-
-Note: Complete the 'Configure environment' section as the following commands require those environment variables.
-
-List releases
+List releases which will download `replicated/vendor-cli` and verify the environment variables are configured.
 ```
 make docker-list-releases
 ```
 
-Promote a release
+Promote a release via Docker vendor CLI
 ```
-make docker-release
+make docker-release working_dir=/path/to/git/repo
 ```
+
+Note: On Windows OS ensure the `working_dir` is shared and available in Docker (Settings -> Shared Drives).
 
 ### Integrating with CI
 
