@@ -127,9 +127,9 @@ Note: On Windows OS ensure the `working_dir` is shared and available in Docker (
 
 Often teams will use one channel per developer, and then keep the `master` branch of this repo in sync with their `Unstable` branch.
 
-The project includes CI configs for [Travis CI](https://travis-ci.org), [CircleCI](https://circleci.com), [Jenkins CI](https://jenkins.io),  and [GitLab CI](https://gitlab.com).
+The project includes CI configs for [Travis CI](https://travis-ci.org), [CircleCI](https://circleci.com), [Jenkins CI](https://jenkins.io), and [GitLab CI](https://gitlab.com).
 
-Both configs will:
+The configs will:
 
 **On pull requests**:
 
