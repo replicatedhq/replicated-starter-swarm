@@ -6,8 +6,8 @@ name: "Swarm Nginx Example"
 
 properties:
   console_title: Swarm Nginx Example
-  app_url: https://{{repl ConfigOption "hostname" }}
-  logo_url: https://s3.amazonaws.com/poly-screenshots.angel.co/Project/5e/418654/b33617f926fd6c7df2ddab361dd3d60d-original.png
+  app_url: 'https://{{repl ConfigOption "hostname" }}'
+  logo_url: 'https://s3.amazonaws.com/poly-screenshots.angel.co/Project/5e/418654/b33617f926fd6c7df2ddab361dd3d60d-original.png'
 host_requirements:
   cpu_cores: 1
   memory: 2GB
@@ -27,11 +27,57 @@ config:
     required: true
   - name: hostname
     title: Hostname
+    required: true
     value: '{{repl ConsoleSetting "tls.hostname" }}'
     type: text
     test_proc:
       display_name: Check DNS
       command: resolve_host
+- name: db_settings_type
+  title: Database Type
+  description: Would you like to run an internal database or provide your own?
+  items:
+  - name: db_type
+    type: select_one
+    default: embedded
+    items:
+    - name: embedded
+      title: Embedded
+    - name: external
+      title: External
+  - name: external_database_connection_string
+    type: text
+    help_text: Enter a connection string for your external database
+    when: db_type=external
+    default: postgresql://user:password@postgres.mycompany.com/some-database
+# derived fields hidden from the user
+- name: hidden_db_config
+  items:
+  # store output from our random command
+  - name: embedded_database_password
+    type: password
+    hidden: true
+    value_cmd:
+      name: embedded_database_password
+      value_at: 0
+  - name: database_connection_string
+    type: password
+    hidden: true
+    readonly: true
+    default: >-
+      {{repl if ConfigOptionEquals "db_type" "embedded"}}
+      postgresql://onpremuser:{{repl ConfigOption "embedded_database_password"}}@postgres:5432/my_db
+      {{repl else}}
+      {{repl ConfigOption "external_database_connection_string"}}
+      {{repl end}}
+
+# use a cmd to generate a persistent random password for the embedded database. This will not change across application releases
+cmds:
+- name: embedded_database_password
+  cmd: random
+  args:
+  - "64"
+  - "[A-Za-z0-9]"
 
 swarm:
   configs:
@@ -39,7 +85,7 @@ swarm:
     value: |
       server {
         listen                443 ssl;
-        server_name           localhost;
+        server_name           {{repl ConfigOption "hostname"}};
         ssl_certificate       /run/secrets/tls_cert;
         ssl_certificate_key   /run/secrets/tls_key;
 
@@ -61,8 +107,12 @@ swarm:
 monitors:
   cpuacct:
   - nginx
+  - api
+  - postgres
   memory:
   - nginx
+  - api
+  - postgres
 
 backup:
   enabled: true
@@ -93,6 +143,21 @@ services:
       # start new versions before stopping old ones
       update_config:
         order: start-first
+  postgres:
+    image: postgres:10.4
+    # determine whether to run 1 replica or 0
+    deploy:
+      replicas: {{repl if ConfigOptionEquals "db_type" "embedded"}}1{{repl else}}0{{repl end}}
+    environment:
+      # these vars will bootstrap a default user and password for the embedded db
+      POSTGRES_PASSWORD: '{{repl ConfigOption "embedded_dabase_password"}}'
+      POSTGRES_USER: onpremuser
+      POSTGRES_DB: my_db
+  # example database client to demonstrate how to connect -- replace this with your app container
+  api:
+   image: nginx:alpine # not a real api :)
+   environment:
+     POSTGRES_CONNSTRING: '{{repl ConfigOption "database_connection_string"}}'
 
 configs:
   nginx_config:
